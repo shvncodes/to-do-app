@@ -66,23 +66,27 @@
             padding: 10px 25px;
             background-color: rgb(117, 117, 255);
             color: white;
+            cursor: pointer;
         }
 
-        .done, .delete{
+        .done{
+            background-color: green;
+        }
+        .delete{
             background-color: darkblue;
         }
         #add:hover{
             background-color: rgb(154, 154, 255);;
         }
         .done:hover{
-            background-color: rgb(18, 18, 183);
+            background-color: rgb(23, 177, 23);
         }
         .delete:hover{
-            background-color: rgb(26, 26, 203);
+            background-color: rgb(4, 4, 183);
         }
 
         #toDoBox{
-            display: none;
+            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -118,6 +122,16 @@
             text-decoration: line-through;
             
         }
+        
+        .message{
+            display: flex;
+            width: 100%;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            opacity: 50%;
+            min-height: 200px;
+        }
     </style>
 </head>
 <body>
@@ -126,7 +140,7 @@
         <div id="box">
             <div id="inputBox">
                 <input id="taskInput" type="text" placeholder="Enter to-do item" required>
-                <button id="add">Add</button>
+                <button id="add" type="button">Add</button>
             </div>
             <div id="toDoBox"></div>
         </div>
@@ -136,7 +150,12 @@
         const taskInput = document.querySelector("#taskInput");
         const addButton = document.querySelector("#add");
         const toDoBox = document.querySelector("#toDoBox");
-
+        
+        const emptyStateDiv = document.createElement("div");
+        emptyStateDiv.className = "message";
+        emptyStateDiv.textContent = "No tasks yet!"
+        toDoBox.append(emptyStateDiv);
+        
 
         function createButtons(item) {
             const buttons = document.createElement("div");
@@ -153,7 +172,7 @@
             del.addEventListener("click", () => {
                 toDoBox.removeChild(item);
                 if(toDoBox.children.length === 0) {
-                    toDoBox.style.display = "none";
+                    toDoBox.append(emptyStateDiv);
                 }
             });
             
@@ -164,32 +183,40 @@
         }
 
         function insertToDo() {
-            const text = taskInput.value;
-            if(text) {
-                const div = document.createElement("div");
-                div.className = "item";
+            const text = taskInput.value.trim();
+            if(!text){
+                alert("Please enter valid task");
+                return;
+            } 
 
-                const para = document.createElement('p');
-                para.textContent = text;
-                div.append(para);
-                
-                const buttons = createButtons(div);
-                div.append(buttons);
-
-                toDoBox.append(div);
-                toDoBox.style.display = "flex";
+            if(toDoBox.children.length === 1 && toDoBox.children[0].isSameNode(emptyStateDiv)) {
+                // remove the emptyStateDiv
+                toDoBox.removeChild(emptyStateDiv);
             }
+
+            const div = document.createElement("div");
+            div.className = "item";
+
+            const para = document.createElement('p');
+            para.textContent = text;
+            div.append(para);
+            
+            const buttons = createButtons(div);
+            div.append(buttons);
+
+            toDoBox.prepend(div);
+            toDoBox.style.display = "flex";
         }
 
         addButton.addEventListener("click", ()=> {
             insertToDo();
-            taskInput.value = null;
+            taskInput.value = "";
         });
-        
+
         taskInput.addEventListener("keydown", function(event) {
             if(event.key === "Enter") {
                 insertToDo();
-                taskInput.value = null;
+                taskInput.value = "";
             }
         });
 
