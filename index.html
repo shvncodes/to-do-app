@@ -150,14 +150,37 @@
         const taskInput = document.querySelector("#taskInput");
         const addButton = document.querySelector("#add");
         const toDoBox = document.querySelector("#toDoBox");
+        const LOCAL_STORAGE_KEY = "all_tasks";
+
+        let allTasks = [] 
+        /*
+            TASK = {
+                taskId: "task-id",
+                title: "Potty karni hai"
+            }
+        */
+
+        const localStorageTasks = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) ?? [];
+        localStorageTasks.forEach((task) => {
+            // push into allTasks
+            allTasks.push(task);
+            // create Div and process that
+            createItemDiv(task.title, task.taskId);
+        })
         
         const emptyStateDiv = document.createElement("div");
         emptyStateDiv.className = "message";
         emptyStateDiv.textContent = "No tasks yet!"
-        toDoBox.append(emptyStateDiv);
+        if(allTasks === null) {
+            toDoBox.append(emptyStateDiv);
+        }
         
+        function addTask(task) {
+            allTasks.push(task);
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allTasks));
+        }
 
-        function createButtons(item) {
+        function createButtons(item, taskId) {
             const buttons = document.createElement("div");
             const complete = document.createElement("button");
             complete.className = "done";
@@ -171,6 +194,14 @@
             del.innerText = "Delete";
             del.addEventListener("click", () => {
                 toDoBox.removeChild(item);
+                // filter the 
+                const filteredTasks = allTasks.filter((task) =>{
+                    if(task.taskId === taskId) return false;
+                    return true;
+                })
+                allTasks = [...filteredTasks];
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filteredTasks));
+                
                 if(toDoBox.children.length === 0) {
                     toDoBox.append(emptyStateDiv);
                 }
@@ -180,6 +211,21 @@
             buttons.append(complete);
             buttons.append(del);
             return buttons;
+        }
+
+        function createItemDiv(text, taskId) {
+            const div = document.createElement("div");
+            div.className = "item";
+
+            const para = document.createElement('p');
+            para.textContent = text;
+            div.append(para);
+            
+            const buttons = createButtons(div, taskId);
+            div.append(buttons);
+
+            toDoBox.prepend(div);
+            toDoBox.style.display = "flex";
         }
 
         function insertToDo() {
@@ -194,18 +240,14 @@
                 toDoBox.removeChild(emptyStateDiv);
             }
 
-            const div = document.createElement("div");
-            div.className = "item";
+            const taskId = new Date().toISOString();
+            const taskObj = {
+                taskId: taskId,
+                title: text
+            }
 
-            const para = document.createElement('p');
-            para.textContent = text;
-            div.append(para);
-            
-            const buttons = createButtons(div);
-            div.append(buttons);
-
-            toDoBox.prepend(div);
-            toDoBox.style.display = "flex";
+            addTask(taskObj);
+            createItemDiv(text, taskId)
         }
 
         addButton.addEventListener("click", ()=> {
