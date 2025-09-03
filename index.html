@@ -68,21 +68,22 @@
             color: white;
             cursor: pointer;
         }
+        #add:hover{
+            background-color: rgb(154, 154, 255);;
+        }
 
         .done{
             background-color: green;
         }
-        .delete{
-            background-color: darkblue;
-        }
-        #add:hover{
-            background-color: rgb(154, 154, 255);;
-        }
         .done:hover{
             background-color: rgb(23, 177, 23);
         }
+
+        .delete{
+            background-color: crimson;
+        }
         .delete:hover{
-            background-color: rgb(4, 4, 183);
+            background-color: red;
         }
 
         #toDoBox{
@@ -120,7 +121,11 @@
 
         .taskCompleted p {
             text-decoration: line-through;
-            
+        }
+
+        .disabled, .disabled:hover {
+            background-color: grey;
+            cursor: not-allowed;
         }
         
         .message{
@@ -161,6 +166,10 @@
             }
         */
 
+        function saveTasksinLS() {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allTasks));
+        }
+
         const localStorageTasks = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) ?? [];
         localStorageTasks.forEach((task) => {
             // push into allTasks
@@ -172,24 +181,25 @@
         const emptyStateDiv = document.createElement("div");
         emptyStateDiv.className = "message";
         emptyStateDiv.textContent = "No tasks yet!"
-        if(allTasks === null) {
+        if(allTasks.length === 0) {
             toDoBox.append(emptyStateDiv);
         }
-        
-        function addTask(task) {
-            allTasks.push(task);
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allTasks));
-        }
 
-        function createButtons(item, taskId) {
+        function createButtons(item, taskObj) {
             const buttons = document.createElement("div");
             const complete = document.createElement("button");
             complete.className = "done";
             complete.innerText = "Done";
+            if(taskObj.isCompleted) {
+                complete.disabled = true;
+                complete.classList.add("disabled");
+            }
             complete.addEventListener("click", () => {
                 item.classList.add("taskCompleted");
                 const updatedTasks = allTasks.map((task) => {
-                    if(task.taskId === taskId) {
+                    if(task.taskId === taskObj.taskId) {
+                        complete.disabled = true;
+                        complete.classList.add("disabled");
                         return {
                             taskId: task.taskId,
                             title: task.title,
@@ -199,7 +209,7 @@
                     return task;
                 })
                 allTasks = [...updatedTasks];
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedTasks));
+                saveTasksinLS();
 
             });
             
@@ -210,11 +220,11 @@
                 toDoBox.removeChild(item);
                 // filter the 
                 const filteredTasks = allTasks.filter((task) =>{
-                    if(task.taskId === taskId) return false;
+                    if(task.taskId === taskObj.taskId) return false;
                     return true;
                 })
                 allTasks = [...filteredTasks];
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filteredTasks));
+                saveTasksinLS();
                 
                 if(toDoBox.children.length === 0) {
                     toDoBox.append(emptyStateDiv);
@@ -238,7 +248,7 @@
             para.textContent = task.title;
             div.append(para);
             
-            const buttons = createButtons(div, task.taskId);
+            const buttons = createButtons(div, task);
             div.append(buttons);
 
             toDoBox.prepend(div);
@@ -257,15 +267,16 @@
                 toDoBox.removeChild(emptyStateDiv);
             }
 
-            const taskId = new Date().toISOString();
+            const taskId =  Date.now() + Math.random().toString(16).slice(2);
             const taskObj = {
                 taskId: taskId,
                 title: text,
                 isCompleted: false
             }
 
-            addTask(taskObj);
-            createItemDiv(task)
+            allTasks.push(taskObj);
+            saveTasksinLS();
+            createItemDiv(taskObj)
         }
 
         addButton.addEventListener("click", ()=> {
